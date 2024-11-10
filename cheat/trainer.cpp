@@ -4,8 +4,6 @@
 
 #include "trainer.h"
 
-#include <vector>
-
 DWORD trainer::get_process_id(const char* process_name) {
     DWORD process_id = 0;
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
