@@ -40,9 +40,13 @@ void trainer::close_handle(HANDLE handle) {
 
 bool trainer::set_health(LPVOID health_address, int health) {
 
-    if(WriteProcessMemory(process_handle, health_address, &health, sizeof(health), 0)) {
+    int sp = 5;
+    if(WriteProcessMemory(process_handle, health_address, &health, sizeof(health), 0) &&
+        WriteProcessMemory(process_handle, (LPVOID)((uintptr_t)health_address + (uintptr_t)0x14), &sp, sizeof(sp), 0)) {
         return true;
     }
+
+
     throw std::runtime_error("Failed to write process memory");
     return false;
 }
@@ -111,6 +115,16 @@ void trainer::get_health_addr(uintptr_t startAddr, uintptr_t endAddr) {
     }
 }
 
+void trainer::get_health_addr_P(LPVOID pointer, std::vector<LPVOID> offset_list, int index) {
+    if(index >= offset_list.size()) {
+        health_addr = pointer;
+        return;
+    }
+    ReadProcessMemory(process_handle, pointer, &pointer, sizeof(pointer), nullptr);
+    pointer = (LPVOID)((uintptr_t)pointer + (uintptr_t)offset_list[index]);
+    get_health_addr_P(pointer, offset_list, index+1);
+}
+
 void trainer::initialize() {
     std::cout << "Initializing..." << std::endl;
 
@@ -134,6 +148,7 @@ void trainer::initialize() {
         }
     }
 
+    /*
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
 
@@ -159,6 +174,20 @@ void trainer::initialize() {
     for (auto& t : threads) {
         t.join();
     }
+    */
+
+    std::vector<LPVOID> offset_list;
+    offset_list.push_back((LPVOID)0x38);
+    offset_list.push_back((LPVOID)0x478);
+    offset_list.push_back((LPVOID)0x128);
+    offset_list.push_back((LPVOID)0x58);
+    offset_list.push_back((LPVOID)0x318);
+    offset_list.push_back((LPVOID)0xB0);
+    offset_list.push_back((LPVOID)0x160);
+
+    LPVOID pointer = (LPVOID)(0x7FF7EC6C0000+0x012EC560);
+
+    get_health_addr_P(pointer, offset_list, 0);
 
     if (health_addr != nullptr) {
         std::cout << "Found health address: " << health_addr << std::endl;

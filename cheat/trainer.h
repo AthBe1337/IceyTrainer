@@ -22,13 +22,14 @@ private:
     DWORD process_id = 0;
     HANDLE process_handle = nullptr;
 
+public:
     static DWORD get_process_id(const char* process_name);
     static HANDLE open_process(DWORD process_id);
     static void close_handle(HANDLE handle);
     bool set_health(LPVOID health_addr, int health);
     bool set_money(int money);
     void get_health_addr(uintptr_t startAddr, uintptr_t endAddr);
-public:
+    void get_health_addr_P(LPVOID pointer, std::vector<LPVOID> offset_list, int index);
     void initialize();
     void set_health_C(int health);
     void start_cheat();
